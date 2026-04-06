@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { useStore } from '../src/store';
+import { useI18n } from '../src/i18n';
 import { colors, spacing, radius, fonts, fontFamily } from '../src/theme';
 
 export default function SummaryScreen() {
@@ -11,6 +12,7 @@ export default function SummaryScreen() {
   const { state, getMasterSummary, getTotalPupusas, isReady } = useStore();
   const summary = getMasterSummary();
   const total = getTotalPupusas(null);
+  const { t } = useI18n();
   const [copied, setCopied] = useState<'copy' | 'share' | null>(null);
 
   const totalArroz = summary.reduce((s, o) => s + o.arroz, 0);
@@ -20,15 +22,15 @@ export default function SummaryScreen() {
     state.flavors.find(f => f.id === flavorId)?.name ?? flavorId;
 
   const buildText = () => {
-    const lines = ['Pedido de Pupusas:'];
+    const lines = [t.pupusaOrder];
     for (const order of summary) {
       const name = getFlavorName(order.flavorId);
       const parts: string[] = [];
-      if (order.arroz > 0) parts.push(`${order.arroz} arroz`);
-      if (order.maiz > 0) parts.push(`${order.maiz} maíz`);
+      if (order.arroz > 0) parts.push(`${order.arroz} ${t.arrozLower}`);
+      if (order.maiz > 0) parts.push(`${order.maiz} ${t.maizLower}`);
       lines.push(`- ${name}: ${parts.join(', ')}`);
     }
-    lines.push(`Total: ${total} pupusas (${totalArroz} arroz, ${totalMaiz} maíz)`);
+    lines.push(`${t.total}: ${total} ${t.pupusas} (${totalArroz} ${t.arrozLower}, ${totalMaiz} ${t.maizLower})`);
     return lines.join('\n');
   };
 
@@ -66,7 +68,7 @@ export default function SummaryScreen() {
         <Pressable onPress={() => router.replace(`/order?mode=${state.mode}`)} style={styles.backButton}>
           <Text style={styles.backText}>←</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Tu Pedido</Text>
+        <Text style={styles.headerTitle}>{t.yourOrder}</Text>
         <Image source={require('../assets/pupusapp_brandmark.png')} style={styles.headerBrandmark} resizeMode="contain" />
       </View>
 
@@ -74,9 +76,9 @@ export default function SummaryScreen() {
         {/* Summary card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardColumnLabel}>PUPUSA</Text>
-            <Text style={[styles.cardColumnDough, { color: colors.arrozText }]}>ARROZ</Text>
-            <Text style={[styles.cardColumnDough, { color: colors.maizText }]}>MAÍZ</Text>
+            <Text style={styles.cardColumnLabel}>{t.pupusa}</Text>
+            <Text style={[styles.cardColumnDough, { color: colors.arrozText }]}>{t.arroz}</Text>
+            <Text style={[styles.cardColumnDough, { color: colors.maizText }]}>{t.maiz}</Text>
           </View>
           {summary.map(order => (
             <View key={order.flavorId} style={styles.summaryRow}>
@@ -94,7 +96,7 @@ export default function SummaryScreen() {
             <Text style={[styles.totalCount, { color: colors.arrozText }]}>{totalArroz}</Text>
             <Text style={[styles.totalCount, { color: colors.maizText }]}>{totalMaiz}</Text>
           </View>
-          <Text style={styles.grandTotal}>{total} pupusas</Text>
+          <Text style={styles.grandTotal}>{total} {t.pupusas}</Text>
         </View>
 
         {/* Actions */}
@@ -103,7 +105,7 @@ export default function SummaryScreen() {
             style={({ pressed }) => [styles.actionButton, pressed && styles.actionPressed]}
             onPress={handleCopy}
           >
-            <Text style={styles.actionText}>{copied === 'copy' ? 'Copiado!' : 'Copiar texto'}</Text>
+            <Text style={styles.actionText}>{copied === 'copy' ? t.copied : t.copyText}</Text>
           </Pressable>
 
           <Pressable
@@ -111,7 +113,7 @@ export default function SummaryScreen() {
             onPress={handleShare}
           >
             <Text style={styles.actionText}>
-              {copied === 'share' ? 'Copiado!' : (Platform.OS === 'web' ? 'Copiar para compartir' : 'Compartir')}
+              {copied === 'share' ? t.copied : (Platform.OS === 'web' ? t.copyToShare : t.share)}
             </Text>
           </Pressable>
 
@@ -120,7 +122,7 @@ export default function SummaryScreen() {
               style={({ pressed }) => [styles.actionButtonPrimary, pressed && styles.actionPressed]}
               onPress={() => router.push('/distribution')}
             >
-              <Text style={styles.actionTextPrimary}>¿De quién es? (y cuánto toca pagar)</Text>
+              <Text style={styles.actionTextPrimary}>{t.whoOrdered}</Text>
             </Pressable>
           )}
 
@@ -128,7 +130,7 @@ export default function SummaryScreen() {
             style={({ pressed }) => [styles.actionButtonOutline, pressed && styles.actionPressed]}
             onPress={() => router.replace(`/order?mode=${state.mode}`)}
           >
-            <Text style={styles.actionTextOutline}>Editar pedido</Text>
+            <Text style={styles.actionTextOutline}>{t.editOrder}</Text>
           </Pressable>
         </View>
       </ScrollView>

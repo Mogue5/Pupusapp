@@ -6,6 +6,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useStore } from '../src/store';
+import { useI18n } from '../src/i18n';
 import { colors, spacing, radius, fonts, fontFamily } from '../src/theme';
 import { Flavor } from '../src/types';
 
@@ -108,6 +109,7 @@ export default function OrderScreen() {
   const { mode } = useLocalSearchParams<{ mode: string }>();
   const isPerPerson = mode === 'per-person';
   const { state, dispatch, getTotalPupusas } = useStore();
+  const { t } = useI18n();
 
   const [activePersonId, setActivePersonId] = useState<string | null>(null);
   const [showNameInput, setShowNameInput] = useState(isPerPerson);
@@ -118,7 +120,7 @@ export default function OrderScreen() {
   const flavorInputRef = useRef<TextInput>(null);
 
   const addPerson = (name: string) => {
-    const finalName = name.trim() || `Persona ${state.persons.length + 1}`;
+    const finalName = name.trim() || `${t.person} ${state.persons.length + 1}`;
     dispatch({ type: 'ADD_PERSON', name: finalName });
     setNameValue('');
     setShowNameInput(false);
@@ -159,11 +161,11 @@ export default function OrderScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.namePromptContainer}>
-          <Text style={styles.namePromptTitle}>¿Cómo se llama?</Text>
+          <Text style={styles.namePromptTitle}>{t.whatsTheirName}</Text>
           <TextInput
             ref={nameInputRef}
             style={styles.nameInput}
-            placeholder="Nombre (opcional)"
+            placeholder={t.nameOptional}
             placeholderTextColor={colors.textMuted}
             value={nameValue}
             onChangeText={setNameValue}
@@ -175,7 +177,7 @@ export default function OrderScreen() {
             style={({ pressed }) => [styles.nameButton, pressed && styles.nameButtonPressed]}
             onPress={() => addPerson(nameValue)}
           >
-            <Text style={styles.nameButtonText}>Empezar</Text>
+            <Text style={styles.nameButtonText}>{t.start}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -190,7 +192,7 @@ export default function OrderScreen() {
           <Text style={styles.backText}>←</Text>
         </Pressable>
         <Text style={styles.headerTitle}>
-          {isPerPerson ? 'Pedido por Persona' : 'Hoja de Pedido'}
+          {isPerPerson ? t.orderByPerson : t.orderSheet}
         </Text>
         <Image source={require('../assets/pupusapp_brandmark.png')} style={styles.headerBrandmark} resizeMode="contain" />
       </View>
@@ -231,7 +233,7 @@ export default function OrderScreen() {
         <View style={styles.inlineNameRow}>
           <TextInput
             style={styles.inlineNameInput}
-            placeholder="Nombre (opcional)"
+            placeholder={t.nameOptional}
             placeholderTextColor={colors.textMuted}
             value={nameValue}
             onChangeText={setNameValue}
@@ -240,7 +242,7 @@ export default function OrderScreen() {
             returnKeyType="done"
           />
           <Pressable onPress={() => addPerson(nameValue)} style={styles.inlineNameButton}>
-            <Text style={styles.inlineNameButtonText}>Agregar</Text>
+            <Text style={styles.inlineNameButtonText}>{t.add}</Text>
           </Pressable>
           <Pressable onPress={() => { setShowNameInput(false); setNameValue(''); }} style={styles.inlineNameCancel}>
             <Text style={styles.inlineNameCancelText}>✕</Text>
@@ -251,27 +253,27 @@ export default function OrderScreen() {
       {/* Column headers */}
       <View style={styles.listWrapper}>
         <View style={styles.columnHeaders}>
-          <Text style={styles.columnLabel}>PUPUSA</Text>
-          <Text style={[styles.columnDough, { color: colors.arrozText }]}>ARROZ</Text>
-          <Text style={[styles.columnDough, { color: colors.maizText }]}>MAÍZ</Text>
+          <Text style={styles.columnLabel}>{t.pupusa}</Text>
+          <Text style={[styles.columnDough, { color: colors.arrozText }]}>{t.arroz}</Text>
+          <Text style={[styles.columnDough, { color: colors.maizText }]}>{t.maiz}</Text>
         </View>
       </View>
 
       {/* Flavor list */}
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        <CategoryHeader title="CLÁSICAS" />
+        <CategoryHeader title={t.classic} />
         {clasicas.map(f => (
           <FlavorRow key={f.id} flavor={f} personId={currentPersonId} />
         ))}
 
-        <CategoryHeader title="ESPECIALIDADES" />
+        <CategoryHeader title={t.specialties} />
         {especialidades.map(f => (
           <FlavorRow key={f.id} flavor={f} personId={currentPersonId} />
         ))}
 
         {customs.length > 0 && (
           <>
-            <CategoryHeader title="MIS SABORES" />
+            <CategoryHeader title={t.myFlavors} />
             {customs.map(f => (
               <FlavorRow key={f.id} flavor={f} personId={currentPersonId} />
             ))}
@@ -284,7 +286,7 @@ export default function OrderScreen() {
             <TextInput
               ref={flavorInputRef}
               style={styles.addFlavorInput}
-              placeholder="Nombre del sabor"
+              placeholder={t.flavorName}
               placeholderTextColor={colors.textMuted}
               value={flavorValue}
               onChangeText={setFlavorValue}
@@ -301,7 +303,7 @@ export default function OrderScreen() {
           </View>
         ) : (
           <Pressable style={styles.addFlavorButton} onPress={() => setShowAddFlavor(true)}>
-            <Text style={styles.addFlavorButtonText}>+ Agregar sabor</Text>
+            <Text style={styles.addFlavorButtonText}>{t.addFlavor}</Text>
           </Pressable>
         )}
 
@@ -312,8 +314,8 @@ export default function OrderScreen() {
       <View style={styles.bottomBar}>
         <Text style={styles.totalText}>
           {isPerPerson && currentPersonId
-            ? `${total} pupusas · Total: ${grandTotal}`
-            : `Total: ${grandTotal} pupusas`
+            ? `${total} ${t.pupusas} · ${t.total}: ${grandTotal}`
+            : `${t.total}: ${grandTotal} ${t.pupusas}`
           }
         </Text>
         <View style={styles.bottomButtons}>
@@ -322,7 +324,7 @@ export default function OrderScreen() {
               style={({ pressed }) => [styles.nextPersonButton, pressed && styles.doneButtonPressed]}
               onPress={() => setShowNameInput(true)}
             >
-              <Text style={styles.nextPersonButtonText}>+ Siguiente</Text>
+              <Text style={styles.nextPersonButtonText}>{t.next}</Text>
             </Pressable>
           )}
           <Pressable
@@ -335,7 +337,7 @@ export default function OrderScreen() {
             disabled={grandTotal === 0}
           >
             <Text style={[styles.doneButtonText, grandTotal === 0 && styles.doneButtonTextDisabled]}>
-              Pedido terminado
+              {t.orderComplete}
             </Text>
           </Pressable>
         </View>

@@ -10,6 +10,7 @@ import {
   Nunito_800ExtraBold,
 } from '@expo-google-fonts/nunito';
 import { StoreProvider } from '../src/store';
+import { I18nProvider } from '../src/i18n';
 import { colors } from '../src/theme';
 
 export default function RootLayout() {
@@ -30,15 +31,17 @@ export default function RootLayout() {
   }
 
   return (
-    <StoreProvider>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-          animation: 'slide_from_right',
-        }}
-      />
-    </StoreProvider>
+    <I18nProvider>
+      <StoreProvider>
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+            animation: 'slide_from_right',
+          }}
+        />
+      </StoreProvider>
+    </I18nProvider>
   );
 }

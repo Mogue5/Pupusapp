@@ -3,11 +3,13 @@ import { View, Text, Image, Pressable, ScrollView, TextInput, StyleSheet } from 
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../src/store';
+import { useI18n } from '../src/i18n';
 import { colors, spacing, radius, fonts, fontFamily } from '../src/theme';
 
 export default function DistributionScreen() {
   const router = useRouter();
   const { state, isReady } = useStore();
+  const { t } = useI18n();
   const [prices, setPrices] = useState<Record<string, string>>({});
 
   const getFlavorName = (flavorId: string) =>
@@ -54,14 +56,14 @@ export default function DistributionScreen() {
         <Pressable onPress={() => router.replace('/summary')} style={styles.backButton}>
           <Text style={styles.backText}>←</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>¿De quién es?</Text>
+        <Text style={styles.headerTitle}>{t.whoOrderedShort}</Text>
         <Image source={require('../assets/pupusapp_brandmark.png')} style={styles.headerBrandmark} resizeMode="contain" />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Price input section */}
         <View style={styles.priceSection}>
-          <Text style={styles.priceSectionTitle}>PRECIOS</Text>
+          <Text style={styles.priceSectionTitle}>{t.prices}</Text>
           {orderedFlavorIds.map(flavorId => (
             <View key={flavorId} style={styles.priceRow}>
               <Text style={styles.priceFlavorName} numberOfLines={1}>
@@ -99,8 +101,8 @@ export default function DistributionScreen() {
               </View>
               {person.orders.map(order => {
                 const parts: string[] = [];
-                if (order.arroz > 0) parts.push(`${order.arroz} arroz`);
-                if (order.maiz > 0) parts.push(`${order.maiz} maíz`);
+                if (order.arroz > 0) parts.push(`${order.arroz} ${t.arrozLower}`);
+                if (order.maiz > 0) parts.push(`${order.maiz} ${t.maizLower}`);
                 const price = getPrice(order.flavorId);
                 const lineTotal = (order.arroz + order.maiz) * price;
                 return (
@@ -115,7 +117,7 @@ export default function DistributionScreen() {
                 );
               })}
               <Text style={styles.personPupusaCount}>
-                {person.orders.reduce((s, o) => s + o.arroz + o.maiz, 0)} pupusas
+                {person.orders.reduce((s, o) => s + o.arroz + o.maiz, 0)} {t.pupusas}
               </Text>
             </View>
           );
@@ -124,7 +126,7 @@ export default function DistributionScreen() {
         {/* Grand total */}
         {hasPrices && (
           <View style={styles.grandTotalCard}>
-            <Text style={styles.grandTotalLabel}>Total</Text>
+            <Text style={styles.grandTotalLabel}>{t.total}</Text>
             <Text style={styles.grandTotalAmount}>
               ${state.persons.reduce((s, p) => s + getPersonTotal(p.id), 0).toFixed(2)}
             </Text>

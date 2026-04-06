@@ -2,11 +2,13 @@ import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../src/store';
+import { useI18n } from '../src/i18n';
 import { colors, spacing, radius, fontFamily } from '../src/theme';
 
 export default function Home() {
   const router = useRouter();
   const { dispatch } = useStore();
+  const { lang, t, toggleLang } = useI18n();
 
   const selectMode = (mode: 'per-person' | 'master') => {
     dispatch({ type: 'SET_MODE', mode });
@@ -19,6 +21,12 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.langRow}>
+        <View style={styles.langSpacer} />
+        <Pressable style={styles.langButton} onPress={toggleLang}>
+          <Text style={styles.langButtonText}>{lang === 'es' ? 'ESP' : 'ENG'}</Text>
+        </Pressable>
+      </View>
       <View style={styles.content}>
         <View style={styles.header}>
           <Image
@@ -33,16 +41,16 @@ export default function Home() {
             style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
             onPress={() => selectMode('per-person')}
           >
-            <Text style={styles.cardTitle}>Por Persona</Text>
-            <Text style={styles.cardDesc}>Cada quien lo suyo</Text>
+            <Text style={styles.cardTitle}>{t.perPersonTitle}</Text>
+            <Text style={styles.cardDesc}>{t.perPersonDesc}</Text>
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
             onPress={() => selectMode('master')}
           >
-            <Text style={styles.cardTitle}>Hoja Completa</Text>
-            <Text style={styles.cardDesc}>Como en la pupusería</Text>
+            <Text style={styles.cardTitle}>{t.masterTitle}</Text>
+            <Text style={styles.cardDesc}>{t.masterDesc}</Text>
           </Pressable>
         </View>
       </View>
@@ -54,6 +62,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  langRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+  },
+  langSpacer: {
+    flex: 1,
+  },
+  langButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+    borderWidth: 2,
+    borderColor: colors.brown,
+    backgroundColor: colors.surface,
+  },
+  langButtonText: {
+    fontSize: 13,
+    fontFamily: fontFamily.bold,
+    color: colors.brown,
   },
   content: {
     flex: 1,
