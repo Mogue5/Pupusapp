@@ -11,6 +11,7 @@ export default function DistributionScreen() {
   const { state, isReady } = useStore();
   const { t } = useI18n();
   const [prices, setPrices] = useState<Record<string, string>>({});
+  const [sharedCostInput, setSharedCostInput] = useState('');
 
   const getFlavorName = (flavorId: string) =>
     state.flavors.find(f => f.id === flavorId)?.name ?? flavorId;
@@ -33,15 +34,29 @@ export default function DistributionScreen() {
     return isNaN(val) ? 0 : val;
   };
 
-  const hasPrices = orderedFlavorIds.some(id => getPrice(id) > 0);
+  const sharedCost = (() => {
+    const val = parseFloat(sharedCostInput);
+    return isNaN(val) ? 0 : val;
+  })();
+
+  const splitters = state.persons.filter(p =>
+    p.orders.some(o => o.arroz > 0 || o.maiz > 0)
+  );
+  const sharedCostShare = sharedCost > 0 && splitters.length > 0
+    ? sharedCost / splitters.length
+    : 0;
+
+  const hasPrices = orderedFlavorIds.some(id => getPrice(id) > 0) || sharedCost > 0;
 
   const getPersonTotal = (personId: string): number => {
     const person = state.persons.find(p => p.id === personId);
     if (!person) return 0;
-    return person.orders.reduce((sum, order) => {
+    const flavorTotal = person.orders.reduce((sum, order) => {
       const price = getPrice(order.flavorId);
       return sum + (order.arroz + order.maiz) * price;
     }, 0);
+    const hasOrders = person.orders.some(o => o.arroz > 0 || o.maiz > 0);
+    return flavorTotal + (hasOrders ? sharedCostShare : 0);
   };
 
   if (!isReady) return null;
@@ -82,6 +97,24 @@ export default function DistributionScreen() {
               </View>
             </View>
           ))}
+
+          <View style={styles.sharedCostRow}>
+            <View style={styles.sharedCostLabelGroup}>
+              <Text style={styles.sharedCostLabel}>{t.deliveryLabel}</Text>
+              <Text style={styles.sharedCostSubtitle}>{t.deliverySubtitle}</Text>
+            </View>
+            <View style={styles.priceInputWrapper}>
+              <Text style={styles.priceDollar}>$</Text>
+              <TextInput
+                style={styles.priceInput}
+                placeholder="0.00"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="decimal-pad"
+                value={sharedCostInput}
+                onChangeText={setSharedCostInput}
+              />
+            </View>
+          </View>
         </View>
 
         {/* Person cards */}
@@ -116,6 +149,12 @@ export default function DistributionScreen() {
                   </View>
                 );
               })}
+              {sharedCostShare > 0 && (
+                <View style={styles.orderLineRow}>
+                  <Text style={styles.orderLineShared}>{t.deliveryLabel}</Text>
+                  <Text style={styles.orderLinePrice}>${sharedCostShare.toFixed(2)}</Text>
+                </View>
+              )}
               <Text style={styles.personPupusaCount}>
                 {person.orders.reduce((s, o) => s + o.arroz + o.maiz, 0)} {t.pupusas}
               </Text>
@@ -225,6 +264,37 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs + 2,
     textAlign: 'right',
     maxWidth: 70,
+  },
+  sharedCostRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.xs + 2,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm + 2,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  sharedCostLabelGroup: {
+    flex: 1,
+    paddingRight: spacing.sm,
+  },
+  sharedCostLabel: {
+    fontSize: 16,
+    fontFamily: fontFamily.semiBold,
+    color: colors.text,
+  },
+  sharedCostSubtitle: {
+    fontSize: 12,
+    fontFamily: fontFamily.regular,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  orderLineShared: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   // Person cards
   personCard: {

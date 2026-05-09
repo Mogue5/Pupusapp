@@ -46,6 +46,8 @@ const translations = {
     // Distribution
     whoOrderedShort: '¿De quién es?',
     prices: 'PRECIOS',
+    deliveryLabel: 'Envío',
+    deliverySubtitle: 'u otros costos compartidos',
   },
   en: {
     // Home
@@ -90,6 +92,8 @@ const translations = {
     // Distribution
     whoOrderedShort: 'Who ordered what?',
     prices: 'PRICES',
+    deliveryLabel: 'Delivery',
+    deliverySubtitle: 'or other shared costs',
   },
 } as const;
 
