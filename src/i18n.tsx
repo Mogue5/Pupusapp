@@ -46,7 +46,6 @@ const translations = {
     maizLower: 'maíz',
     copied: 'Copiado!',
     copyText: 'Copiar texto',
-    copyToShare: 'Copiar para compartir',
     share: 'Compartir',
     whoOrdered: '¿De quién es? (y cuánto toca pagar)',
     editOrder: 'Editar pedido',
@@ -56,6 +55,7 @@ const translations = {
     prices: 'PRECIOS',
     deliveryLabel: 'Envío',
     deliverySubtitle: 'u otros costos compartidos',
+    orderSplit: 'División del pedido:',
   },
   en: {
     // Home
@@ -100,7 +100,6 @@ const translations = {
     maizLower: 'corn',
     copied: 'Copied!',
     copyText: 'Copy text',
-    copyToShare: 'Copy to share',
     share: 'Share',
     whoOrdered: 'Who ordered what? (and how much to pay)',
     editOrder: 'Edit order',
@@ -110,6 +109,7 @@ const translations = {
     prices: 'PRICES',
     deliveryLabel: 'Delivery',
     deliverySubtitle: 'or other shared costs',
+    orderSplit: 'Order split:',
   },
 } as const;
 

@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, Image, Pressable, ScrollView, TextInput, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../src/store';
 import { useI18n } from '../src/i18n';
+import { canShare, shareOrCopy } from '../src/share';
 import { colors, spacing, radius, fonts, fontFamily } from '../src/theme';
 
 // Bank-app cents-fill: digits are treated as cents from the right.
@@ -68,6 +69,26 @@ export default function DistributionScreen() {
     }, 0);
     const hasOrders = person.orders.some(o => o.arroz > 0 || o.maiz > 0);
     return flavorTotal + (hasOrders ? sharedCostShare : 0);
+  };
+
+  const [copied, setCopied] = useState(false);
+
+  const buildSplitText = () => {
+    const lines = [t.orderSplit];
+    for (const person of splitters) {
+      lines.push(`- ${person.name}: $${getPersonTotal(person.id).toFixed(2)}`);
+    }
+    const grandTotal = splitters.reduce((s, p) => s + getPersonTotal(p.id), 0);
+    lines.push(`${t.total}: $${grandTotal.toFixed(2)}`);
+    return lines.join('\n');
+  };
+
+  const handleShareSplit = async () => {
+    const didCopy = await shareOrCopy(buildSplitText());
+    if (didCopy) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
   };
 
   if (!isReady) return null;
@@ -180,6 +201,19 @@ export default function DistributionScreen() {
             <Text style={styles.grandTotalAmount}>
               ${state.persons.reduce((s, p) => s + getPersonTotal(p.id), 0).toFixed(2)}
             </Text>
+          </View>
+        )}
+
+        {hasPrices && (
+          <View style={styles.shareActions}>
+            <Pressable
+              style={({ pressed }) => [styles.shareButton, pressed && styles.shareButtonPressed]}
+              onPress={handleShareSplit}
+            >
+              <Text style={styles.shareButtonText}>
+                {copied ? t.copied : (canShare ? t.share : t.copyText)}
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -377,6 +411,26 @@ const styles = StyleSheet.create({
   grandTotalAmount: {
     fontSize: 24,
     fontFamily: fontFamily.extraBold,
+    color: colors.brown,
+  },
+  shareActions: {
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  shareButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderWidth: 2.5,
+    borderColor: colors.brown,
+  },
+  shareButtonPressed: {
+    opacity: 0.7,
+  },
+  shareButtonText: {
+    fontSize: 16,
+    fontFamily: fontFamily.bold,
     color: colors.brown,
   },
 });

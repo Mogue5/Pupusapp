@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { View, Text, Image, Pressable, ScrollView, StyleSheet, Share, Platform } from 'react-native';
+import { View, Text, Image, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Clipboard from 'expo-clipboard';
 import { useStore } from '../src/store';
 import { useI18n } from '../src/i18n';
+import { canShare, shareOrCopy } from '../src/share';
 import { colors, spacing, radius, fonts, fontFamily } from '../src/theme';
 
 export default function SummaryScreen() {
@@ -13,7 +13,7 @@ export default function SummaryScreen() {
   const summary = getMasterSummary();
   const total = getTotalPupusas(null);
   const { t } = useI18n();
-  const [copied, setCopied] = useState<'copy' | 'share' | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const totalArroz = summary.reduce((s, o) => s + o.arroz, 0);
   const totalMaiz = summary.reduce((s, o) => s + o.maiz, 0);
@@ -34,25 +34,12 @@ export default function SummaryScreen() {
     return lines.join('\n');
   };
 
-  const showCopiedFeedback = (source: 'copy' | 'share') => {
-    setCopied(source);
-    setTimeout(() => setCopied(null), 1500);
-  };
-
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(buildText());
-    showCopiedFeedback('copy');
-  };
-
   const handleShare = async () => {
-    if (Platform.OS === 'web') {
-      await Clipboard.setStringAsync(buildText());
-      showCopiedFeedback('share');
-      return;
+    const didCopy = await shareOrCopy(buildText());
+    if (didCopy) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
     }
-    try {
-      await Share.share({ message: buildText() });
-    } catch (_) {}
   };
 
   // If no order data (e.g. page reload), go home
@@ -103,17 +90,10 @@ export default function SummaryScreen() {
         <View style={styles.actions}>
           <Pressable
             style={({ pressed }) => [styles.actionButton, pressed && styles.actionPressed]}
-            onPress={handleCopy}
-          >
-            <Text style={styles.actionText}>{copied === 'copy' ? t.copied : t.copyText}</Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [styles.actionButton, pressed && styles.actionPressed]}
             onPress={handleShare}
           >
             <Text style={styles.actionText}>
-              {copied === 'share' ? t.copied : (Platform.OS === 'web' ? t.copyToShare : t.share)}
+              {copied ? t.copied : (canShare ? t.share : t.copyText)}
             </Text>
           </Pressable>
 
