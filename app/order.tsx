@@ -112,7 +112,7 @@ export default function OrderScreen() {
   const { t } = useI18n();
 
   const [activePersonId, setActivePersonId] = useState<string | null>(null);
-  const [showNameInput, setShowNameInput] = useState(isPerPerson);
+  const [showNameInput, setShowNameInput] = useState(false);
   const [nameValue, setNameValue] = useState('');
   const [showAddFlavor, setShowAddFlavor] = useState(false);
   const [flavorValue, setFlavorValue] = useState('');
@@ -195,7 +195,7 @@ export default function OrderScreen() {
   };
 
   // Show name input prompt if per-person and no persons yet
-  if (isPerPerson && state.persons.length === 0 && showNameInput) {
+  if (isPerPerson && state.persons.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.namePromptContainer}>
@@ -272,28 +272,6 @@ export default function OrderScreen() {
         </ScrollView>
       )}
 
-      {/* Inline name input for adding more people */}
-      {isPerPerson && showNameInput && state.persons.length > 0 && (
-        <View style={styles.inlineNameRow}>
-          <TextInput
-            style={styles.inlineNameInput}
-            placeholder={t.nameOptional}
-            placeholderTextColor={colors.textMuted}
-            value={nameValue}
-            onChangeText={setNameValue}
-            onSubmitEditing={() => addPerson(nameValue)}
-            autoFocus
-            returnKeyType="done"
-          />
-          <Pressable onPress={() => addPerson(nameValue)} style={styles.inlineNameButton}>
-            <Text style={styles.inlineNameButtonText}>{t.add}</Text>
-          </Pressable>
-          <Pressable onPress={() => { setShowNameInput(false); setNameValue(''); }} style={styles.inlineNameCancel}>
-            <Text style={styles.inlineNameCancelText}>✕</Text>
-          </Pressable>
-        </View>
-      )}
-
       {/* Column headers */}
       <View style={styles.listWrapper}>
         <View style={styles.columnHeaders}>
@@ -368,7 +346,7 @@ export default function OrderScreen() {
               style={({ pressed }) => [styles.nextPersonButton, pressed && styles.doneButtonPressed]}
               onPress={() => setShowNameInput(true)}
             >
-              <Text style={styles.nextPersonButtonText}>{t.next}</Text>
+              <Text style={styles.nextPersonButtonText}>{t.addPerson}</Text>
             </Pressable>
           )}
           <Pressable
@@ -386,6 +364,46 @@ export default function OrderScreen() {
           </Pressable>
         </View>
       </View>
+
+      <Modal
+        visible={isPerPerson && showNameInput && state.persons.length > 0}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { setShowNameInput(false); setNameValue(''); }}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => { setShowNameInput(false); setNameValue(''); }}
+        >
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>{t.whatsTheirName}</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder={t.nameOptional}
+              placeholderTextColor={colors.textMuted}
+              value={nameValue}
+              onChangeText={setNameValue}
+              onSubmitEditing={() => addPerson(nameValue)}
+              autoFocus
+              returnKeyType="done"
+            />
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={({ pressed }) => [styles.modalCancel, pressed && styles.modalPressed]}
+                onPress={() => { setShowNameInput(false); setNameValue(''); }}
+              >
+                <Text style={styles.modalCancelText}>{t.cancel}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.modalConfirm, pressed && styles.modalPressed]}
+                onPress={() => addPerson(nameValue)}
+              >
+                <Text style={styles.modalConfirmText}>{t.add}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={showEmptyWarning}
@@ -517,47 +535,6 @@ const styles = StyleSheet.create({
   chipAddText: {
     fontSize: 18,
     color: colors.brown,
-    fontFamily: fontFamily.bold,
-  },
-  // Inline name input
-  inlineNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  inlineNameInput: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 16,
-    fontFamily: fontFamily.regular,
-    borderWidth: 2,
-    borderColor: colors.border,
-    color: colors.text,
-  },
-  inlineNameButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    borderWidth: 2,
-    borderColor: colors.brown,
-  },
-  inlineNameButtonText: {
-    color: colors.surface,
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-  },
-  inlineNameCancel: {
-    padding: spacing.sm,
-  },
-  inlineNameCancelText: {
-    fontSize: 16,
-    color: colors.textMuted,
     fontFamily: fontFamily.bold,
   },
   // Name prompt (first person)
@@ -839,6 +816,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.lg,
     lineHeight: 22,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontFamily: fontFamily.extraBold,
+    color: colors.brown,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  modalInput: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: 18,
+    fontFamily: fontFamily.medium,
+    textAlign: 'center',
+    borderWidth: 2,
+    borderColor: colors.border,
+    marginBottom: spacing.lg,
+    color: colors.text,
   },
   modalButtons: {
     flexDirection: 'row',
