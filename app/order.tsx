@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import {
-  View, Text, Image, Pressable, ScrollView, TextInput, StyleSheet, Platform,
+  View, Text, Image, Pressable, ScrollView, TextInput, StyleSheet, Platform, Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -116,8 +116,37 @@ export default function OrderScreen() {
   const [nameValue, setNameValue] = useState('');
   const [showAddFlavor, setShowAddFlavor] = useState(false);
   const [flavorValue, setFlavorValue] = useState('');
+  const [showEmptyWarning, setShowEmptyWarning] = useState(false);
   const nameInputRef = useRef<TextInput>(null);
   const flavorInputRef = useRef<TextInput>(null);
+
+  const personIsEmpty = (personId: string) => {
+    const person = state.persons.find(p => p.id === personId);
+    if (!person) return false;
+    return !person.orders.some(o => o.arroz > 0 || o.maiz > 0);
+  };
+
+  const emptyPersons = isPerPerson
+    ? state.persons.filter(p => !p.orders.some(o => o.arroz > 0 || o.maiz > 0))
+    : [];
+
+  const buildEmptyMessage = () => {
+    const names = emptyPersons.map(p => p.name);
+    let subject: string;
+    let isPlural: boolean;
+    if (names.length === 1) {
+      subject = names[0];
+      isPlural = false;
+    } else if (names.length === 2) {
+      subject = `${names[0]} ${t.confirmAnd} ${names[1]}`;
+      isPlural = true;
+    } else {
+      subject = t.confirmEmptyCountSubject.replace('%d', String(names.length));
+      isPlural = true;
+    }
+    const template = isPlural ? t.confirmEmptyMsgPlural : t.confirmEmptyMsgSingular;
+    return template.replace('%s', subject);
+  };
 
   const addPerson = (name: string) => {
     const finalName = name.trim() || `${t.person} ${state.persons.length + 1}`;
@@ -144,6 +173,15 @@ export default function OrderScreen() {
   const grandTotal = isPerPerson ? getTotalPupusas(null) : total;
 
   const handleDone = () => {
+    if (isPerPerson && emptyPersons.length > 0) {
+      setShowEmptyWarning(true);
+      return;
+    }
+    router.push('/summary');
+  };
+
+  const proceedToSummary = () => {
+    setShowEmptyWarning(false);
     router.push('/summary');
   };
 
@@ -202,21 +240,27 @@ export default function OrderScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsContainer}>
           <View style={styles.chipsRow}>
             {state.persons.map(p => (
-              <Pressable
-                key={p.id}
-                style={[
-                  styles.chip,
-                  currentPersonId === p.id && styles.chipActive,
-                ]}
-                onPress={() => setActivePersonId(p.id)}
-              >
-                <Text style={[
-                  styles.chipText,
-                  currentPersonId === p.id && styles.chipTextActive,
-                ]}>
-                  {p.name}
-                </Text>
-              </Pressable>
+              <View key={p.id} style={styles.chipWrapper}>
+                <Pressable
+                  style={[
+                    styles.chip,
+                    currentPersonId === p.id && styles.chipActive,
+                  ]}
+                  onPress={() => setActivePersonId(p.id)}
+                >
+                  <Text style={[
+                    styles.chipText,
+                    currentPersonId === p.id && styles.chipTextActive,
+                  ]}>
+                    {p.name}
+                  </Text>
+                </Pressable>
+                {personIsEmpty(p.id) && (
+                  <View style={styles.chipBadge} pointerEvents="none">
+                    <Text style={styles.chipBadgeText}>!</Text>
+                  </View>
+                )}
+              </View>
             ))}
             <Pressable
               style={styles.chipAdd}
@@ -342,6 +386,33 @@ export default function OrderScreen() {
           </Pressable>
         </View>
       </View>
+
+      <Modal
+        visible={showEmptyWarning}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowEmptyWarning(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setShowEmptyWarning(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalText}>{buildEmptyMessage()}</Text>
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={({ pressed }) => [styles.modalCancel, pressed && styles.modalPressed]}
+                onPress={() => setShowEmptyWarning(false)}
+              >
+                <Text style={styles.modalCancelText}>{t.cancel}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.modalConfirm, pressed && styles.modalPressed]}
+                onPress={proceedToSummary}
+              >
+                <Text style={styles.modalConfirmText}>{t.continueAction}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -389,6 +460,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingBottom: spacing.sm,
   },
+  chipWrapper: {
+    position: 'relative',
+  },
   chip: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -396,6 +470,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.chip,
     borderWidth: 2,
     borderColor: 'transparent',
+  },
+  chipBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.primary,
+    borderWidth: 2,
+    borderColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chipBadgeText: {
+    color: colors.surface,
+    fontSize: 11,
+    fontFamily: fontFamily.extraBold,
+    lineHeight: 12,
+    textAlign: 'center',
   },
   chipActive: {
     backgroundColor: colors.chipActive,
@@ -720,5 +814,65 @@ const styles = StyleSheet.create({
   },
   doneButtonTextDisabled: {
     color: colors.textMuted,
+  },
+  // Confirm modal
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 2.5,
+    borderColor: colors.brown,
+    width: '100%',
+    maxWidth: 380,
+  },
+  modalText: {
+    fontSize: 16,
+    fontFamily: fontFamily.semiBold,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 2.5,
+    borderColor: colors.brown,
+  },
+  modalCancelText: {
+    color: colors.brown,
+    fontSize: 15,
+    fontFamily: fontFamily.extraBold,
+  },
+  modalConfirm: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderWidth: 2.5,
+    borderColor: colors.brown,
+  },
+  modalConfirmText: {
+    color: colors.surface,
+    fontSize: 15,
+    fontFamily: fontFamily.extraBold,
+  },
+  modalPressed: {
+    opacity: 0.8,
   },
 });

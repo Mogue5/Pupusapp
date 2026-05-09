@@ -30,6 +30,12 @@ const translations = {
     next: '+ Siguiente',
     orderComplete: 'Pedido terminado',
     person: 'Persona',
+    confirmEmptyMsgSingular: '%s no ha agregado sus pupusas. ¿Seguro/a que quieres continuar?',
+    confirmEmptyMsgPlural: '%s no han agregado sus pupusas. ¿Seguro/a que quieres continuar?',
+    confirmEmptyCountSubject: '%d personas',
+    confirmAnd: 'y',
+    cancel: 'Cancelar',
+    continueAction: 'Continuar',
 
     // Summary
     yourOrder: 'Tu Pedido',
@@ -76,6 +82,12 @@ const translations = {
     next: '+ Next',
     orderComplete: 'Order complete',
     person: 'Person',
+    confirmEmptyMsgSingular: "%s hasn't added their pupusas. Are you sure you want to continue?",
+    confirmEmptyMsgPlural: "%s haven't added their pupusas. Are you sure you want to continue?",
+    confirmEmptyCountSubject: '%d people',
+    confirmAnd: 'and',
+    cancel: 'Cancel',
+    continueAction: 'Continue',
 
     // Summary
     yourOrder: 'Your Order',
