@@ -10,6 +10,8 @@ const initialState: AppState = {
   persons: [],
   masterOrders: [],
   flavors: [...DEFAULT_FLAVORS],
+  prices: {},
+  sharedCost: '',
 };
 
 type Action =
@@ -18,6 +20,8 @@ type Action =
   | { type: 'UPDATE_ORDER'; personId: string | null; flavorId: string; dough: 'arroz' | 'maiz'; delta: number }
   | { type: 'RESET_ORDER'; personId: string | null; flavorId: string; dough: 'arroz' | 'maiz' }
   | { type: 'ADD_FLAVOR'; name: string }
+  | { type: 'SET_PRICE'; flavorId: string; value: string }
+  | { type: 'SET_SHARED_COST'; value: string }
   | { type: 'RESET_ALL' }
   | { type: 'HYDRATE'; state: AppState };
 
@@ -46,10 +50,15 @@ function resetOrder(orders: PupusaOrder[], flavorId: string, dough: 'arroz' | 'm
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'HYDRATE':
-      return action.state;
+      return {
+        ...initialState,
+        ...action.state,
+        prices: action.state.prices ?? {},
+        sharedCost: action.state.sharedCost ?? '',
+      };
 
     case 'SET_MODE':
-      return { ...initialState, mode: action.mode, flavors: state.flavors };
+      return { ...state, mode: action.mode };
 
     case 'ADD_PERSON': {
       const newPerson: PersonOrder = {
@@ -100,8 +109,17 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, flavors: [...state.flavors, newFlavor] };
     }
 
+    case 'SET_PRICE':
+      return {
+        ...state,
+        prices: { ...state.prices, [action.flavorId]: action.value },
+      };
+
+    case 'SET_SHARED_COST':
+      return { ...state, sharedCost: action.value };
+
     case 'RESET_ALL':
-      return { ...initialState, flavors: [...DEFAULT_FLAVORS] };
+      return { ...initialState, flavors: state.flavors };
 
     default:
       return state;

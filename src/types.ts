@@ -23,4 +23,6 @@ export interface AppState {
   persons: PersonOrder[];
   masterOrders: PupusaOrder[];
   flavors: Flavor[];
+  prices: Record<string, string>;
+  sharedCost: string;
 }

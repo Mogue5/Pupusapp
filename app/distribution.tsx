@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { View, Text, Image, Pressable, ScrollView, TextInput, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,12 +6,23 @@ import { useStore } from '../src/store';
 import { useI18n } from '../src/i18n';
 import { colors, spacing, radius, fonts, fontFamily } from '../src/theme';
 
+// Bank-app cents-fill: digits are treated as cents from the right.
+// "85" → "0.85", "300" → "3.00", "1234" → "12.34". All-zeros → "".
+function formatCents(input: string): string {
+  const cleaned = input.replace(/\D/g, '');
+  if (!cleaned || /^0+$/.test(cleaned)) return '';
+  const padded = cleaned.padStart(3, '0');
+  const integer = padded.slice(0, -2).replace(/^0+/, '') || '0';
+  const cents = padded.slice(-2);
+  return `${integer}.${cents}`;
+}
+
 export default function DistributionScreen() {
   const router = useRouter();
-  const { state, isReady } = useStore();
+  const { state, dispatch, isReady } = useStore();
   const { t } = useI18n();
-  const [prices, setPrices] = useState<Record<string, string>>({});
-  const [sharedCostInput, setSharedCostInput] = useState('');
+  const prices = state.prices;
+  const sharedCostInput = state.sharedCost;
 
   const getFlavorName = (flavorId: string) =>
     state.flavors.find(f => f.id === flavorId)?.name ?? flavorId;
@@ -90,9 +101,9 @@ export default function DistributionScreen() {
                   style={styles.priceInput}
                   placeholder="0.00"
                   placeholderTextColor={colors.textMuted}
-                  keyboardType="decimal-pad"
+                  keyboardType="numeric"
                   value={prices[flavorId] ?? ''}
-                  onChangeText={(val) => setPrices(prev => ({ ...prev, [flavorId]: val }))}
+                  onChangeText={(val) => dispatch({ type: 'SET_PRICE', flavorId, value: formatCents(val) })}
                 />
               </View>
             </View>
@@ -109,9 +120,9 @@ export default function DistributionScreen() {
                 style={styles.priceInput}
                 placeholder="0.00"
                 placeholderTextColor={colors.textMuted}
-                keyboardType="decimal-pad"
+                keyboardType="numeric"
                 value={sharedCostInput}
-                onChangeText={setSharedCostInput}
+                onChangeText={(val) => dispatch({ type: 'SET_SHARED_COST', value: formatCents(val) })}
               />
             </View>
           </View>

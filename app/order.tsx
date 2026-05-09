@@ -117,6 +117,7 @@ export default function OrderScreen() {
   const [showAddFlavor, setShowAddFlavor] = useState(false);
   const [flavorValue, setFlavorValue] = useState('');
   const [showEmptyWarning, setShowEmptyWarning] = useState(false);
+  const [showExitWarning, setShowExitWarning] = useState(false);
   const nameInputRef = useRef<TextInput>(null);
   const flavorInputRef = useRef<TextInput>(null);
 
@@ -185,6 +186,22 @@ export default function OrderScreen() {
     router.push('/summary');
   };
 
+  const hasData = state.persons.length > 0 || state.masterOrders.length > 0;
+
+  const handleBack = () => {
+    if (hasData) {
+      setShowExitWarning(true);
+      return;
+    }
+    router.replace('/');
+  };
+
+  const confirmExit = () => {
+    setShowExitWarning(false);
+    dispatch({ type: 'RESET_ALL' });
+    router.replace('/');
+  };
+
   const handleAddFlavor = () => {
     const name = flavorValue.trim();
     if (name) {
@@ -226,7 +243,7 @@ export default function OrderScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.replace('/')} style={styles.backButton}>
+        <Pressable onPress={handleBack} style={styles.backButton}>
           <Text style={styles.backText}>←</Text>
         </Pressable>
         <Text style={styles.headerTitle}>
@@ -399,6 +416,33 @@ export default function OrderScreen() {
                 onPress={() => addPerson(nameValue)}
               >
                 <Text style={styles.modalConfirmText}>{t.add}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={showExitWarning}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowExitWarning(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setShowExitWarning(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalText}>{t.confirmExitMsg}</Text>
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={({ pressed }) => [styles.modalCancel, pressed && styles.modalPressed]}
+                onPress={() => setShowExitWarning(false)}
+              >
+                <Text style={styles.modalCancelText}>{t.cancel}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.modalConfirm, pressed && styles.modalPressed]}
+                onPress={confirmExit}
+              >
+                <Text style={styles.modalConfirmText}>{t.exit}</Text>
               </Pressable>
             </View>
           </Pressable>

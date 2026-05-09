@@ -36,6 +36,8 @@ const translations = {
     confirmAnd: 'y',
     cancel: 'Cancelar',
     continueAction: 'Continuar',
+    confirmExitMsg: '¿Seguro que quieres salir? Todo tu progreso se perderá.',
+    exit: 'Salir',
 
     // Summary
     yourOrder: 'Tu Pedido',
@@ -88,6 +90,8 @@ const translations = {
     confirmAnd: 'and',
     cancel: 'Cancel',
     continueAction: 'Continue',
+    confirmExitMsg: 'Are you sure you want to leave? All your progress will be lost.',
+    exit: 'Leave',
 
     // Summary
     yourOrder: 'Your Order',
